@@ -83,6 +83,20 @@ public interface ElementMatcher extends Predicate<Element> {
   }
 
   /**
+   * Creates an element matcher that validates that the raw type of the given element, including the special
+   * requirements of the given element. If the given element is not using a raw type, it will be converted to an element
+   * that does.
+   *
+   * @param element the element to check for the raw type of.
+   * @return a matcher that checks if the given raw type of the element is equal to the required element.
+   */
+  @API(status = API.Status.EXPERIMENTAL, since = "2.2.0")
+  static @NotNull ElementMatcher matchesRaw(@NotNull Element element) {
+    Element rawElementToCheckFor = element.withComponentType(element.rawComponentType());
+    return elementToCheck -> elementToCheck.equals(rawElementToCheckFor);
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override

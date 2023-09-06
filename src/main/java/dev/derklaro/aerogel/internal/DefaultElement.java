@@ -28,6 +28,7 @@ import dev.derklaro.aerogel.AnnotationPredicate;
 import dev.derklaro.aerogel.Element;
 import dev.derklaro.aerogel.internal.annotation.AnnotationFactory;
 import dev.derklaro.aerogel.internal.annotation.DefaultAnnotationPredicate;
+import dev.derklaro.aerogel.internal.reflect.TypeUtil;
 import dev.derklaro.aerogel.internal.util.ToStringHelper;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -52,6 +53,9 @@ public final class DefaultElement implements Element {
 
   private final Type componentType;
   private final List<AnnotationPredicate> annotationPredicates;
+
+  // lazy initialized when needed
+  private Class<?> rawComponentType;
 
   /**
    * Constructs a new default element type instance.
@@ -86,9 +90,33 @@ public final class DefaultElement implements Element {
    * {@inheritDoc}
    */
   @Override
+  public @NotNull Class<?> rawComponentType() {
+    // lazy initialized without locking - it's not really needed here
+    // yea, the extract of the raw type might run twice, but that's still cheaper than (double-checked) locking
+    if (this.rawComponentType == null) {
+      this.rawComponentType = TypeUtil.rawType(this.componentType);
+    }
+
+    return this.rawComponentType;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   @UnmodifiableView
   public @NotNull Collection<AnnotationPredicate> requiredAnnotations() {
     return this.annotationPredicates;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public @NotNull Element withComponentType(@NotNull Type componentType) {
+    // we can pass the same reference for the required annotations as subsequent add calls to the list are required
+    // to copy it, so there can't be a modification to the list anyway.
+    return new DefaultElement(this.componentType, this.annotationPredicates);
   }
 
   /**

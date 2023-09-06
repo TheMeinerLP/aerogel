@@ -63,12 +63,40 @@ public interface Element {
   @NotNull Type componentType();
 
   /**
+   * Get the raw type of the component type of this element. This type is extracted as follows (first element is the
+   * component type):
+   * <ol>
+   *   <li>class: returns the component type itself as it is already raw.
+   *   <li>generic array: returns the array type representation of the raw parameter type.
+   *   <li>parameterized: returns the raw type of the type parameter.
+   *   <li>type variable: returns the raw type of the first upper bound or Object if there is none.
+   *   <li>wildcard: returns either the first lower or upper bound, Object if there is no bound.
+   * </ol>
+   *
+   * @return the raw type of the element component type.
+   * @see #componentType()
+   */
+  @API(status = API.Status.EXPERIMENTAL, since = "2.2.0")
+  @NotNull Class<?> rawComponentType();
+
+  /**
    * Get an unmodifiable view of all required annotations of this element.
    *
    * @return all required annotations of this element.
    */
   @UnmodifiableView
   @NotNull Collection<AnnotationPredicate> requiredAnnotations();
+
+  /**
+   * Returns a new element with the same requirements as the element being called on but with a different component
+   * type.
+   *
+   * @param componentType the component type to use for the new element.
+   * @return a new element with the same requirements as this element but using the given component type.
+   */
+  @Contract(value = "_ -> new", pure = true)
+  @API(status = API.Status.EXPERIMENTAL, since = "2.2.0")
+  @NotNull Element withComponentType(@NotNull Type componentType);
 
   /**
    * Adds the given annotations as required annotations.
